@@ -7,25 +7,31 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
+    html, body {
+      height: 100%;
       background: #0d0d0d;
       color: #eee;
-      font-family: 'Inter', system-ui, sans-serif;
-      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    .layout {
+      height: 100vh;
       display: flex;
       flex-direction: column;
     }
 
     header {
-      padding: 20px 32px;
+      padding: 10px 24px;
       border-bottom: 1px solid #1f1f1f;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-shrink: 0;
     }
 
     header h1 {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
       letter-spacing: 0.05em;
       color: #fff;
@@ -35,7 +41,7 @@
 
     .controls {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
     }
 
@@ -43,21 +49,21 @@
       background: #1e1e1e;
       border: 1px solid #333;
       color: #eee;
-      padding: 7px 18px;
+      padding: 6px 14px;
       border-radius: 6px;
-      font-size: 13px;
+      font-size: 12px;
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
+      transition: background 0.15s;
     }
 
-    button:hover { background: #2a2a2a; border-color: #555; }
+    button:hover { background: #2a2a2a; }
     button.primary { background: #7c6cfc; border-color: #7c6cfc; color: #fff; }
     button.primary:hover { background: #6a5ae0; }
 
     .sync-status {
-      font-size: 12px;
+      font-size: 11px;
       color: #555;
-      padding: 4px 10px;
+      padding: 3px 10px;
       background: #151515;
       border: 1px solid #222;
       border-radius: 20px;
@@ -67,44 +73,48 @@
 
     main {
       flex: 1;
-      padding: 24px 32px;
+      padding: 16px 24px;
+      min-height: 0;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-
-    @media (max-width: 900px) {
-      .grid { grid-template-columns: 1fr; }
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 12px;
+      height: 100%;
     }
 
     .video-card {
       background: #111;
       border: 1px solid #1f1f1f;
-      border-radius: 10px;
+      border-radius: 8px;
       overflow: hidden;
-      transition: border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
     }
 
-    .video-card:hover { border-color: #333; }
-
     .video-card video {
+      flex: 1;
       width: 100%;
+      min-height: 0;
       display: block;
       background: #000;
+      object-fit: contain;
     }
 
     .video-footer {
-      padding: 10px 14px;
+      padding: 6px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid #1a1a1a;
     }
 
     .label {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       display: flex;
       align-items: center;
@@ -120,49 +130,38 @@
       text-transform: uppercase;
     }
 
-    .badge.original { background: #1a3040; color: #5ab0d8; border: 1px solid #1e4a60; }
+    .badge.original  { background: #1a3040; color: #5ab0d8; border: 1px solid #1e4a60; }
     .badge.generated { background: #2a1a40; color: #a07cf0; border: 1px solid #3a2060; }
 
     .video-time {
       font-size: 11px;
-      color: #444;
+      color: #555;
       font-variant-numeric: tabular-nums;
-    }
-
-    footer {
-      padding: 14px 32px;
-      border-top: 1px solid #1a1a1a;
-      font-size: 11px;
-      color: #333;
-      text-align: center;
     }
   </style>
 </head>
 <body>
-
-<header>
-  <h1>Syn<span>Tests</span></h1>
-  <div class="controls">
-    <div class="sync-status" id="sync-status">● not synced</div>
-    <button onclick="syncAll()">↺ Sync</button>
-    <button onclick="playAll()" class="primary">▶ Play All</button>
-    <button onclick="pauseAll()">⏸ Pause</button>
-    <button onclick="restartAll()">⏮ Restart</button>
-  </div>
-</header>
-
-<main>
-  <div class="grid" id="grid"></div>
-</main>
-
-<footer>syntests — cloth folding task comparison</footer>
+<div class="layout">
+  <header>
+    <h1>Syn<span>Tests</span></h1>
+    <div class="controls">
+      <div class="sync-status" id="sync-status">● not synced</div>
+      <button onclick="restartAll()">⏮ Restart</button>
+      <button onclick="pauseAll()">⏸ Pause</button>
+      <button onclick="playAll()" class="primary">▶ Play All</button>
+    </div>
+  </header>
+  <main>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
 
 <script>
   const videos = [
-    { file: 'task_cloth_folding_1x_compressed.mp4',   label: 'Task — 1x Speed',   type: 'original'  },
-    { file: 'task_cloth_folding_2_1x_compressed.mp4', label: 'Gen 2 — 1x Speed',  type: 'generated' },
-    { file: 'task_cloth_folding_2x_compressed.mp4',   label: 'Gen 1 — 2x Speed',  type: 'generated' },
-    { file: 'task_cloth_folding_3x_compressed.mp4',   label: 'Gen 3 — 3x Speed',  type: 'generated' },
+    { file: 'task_cloth_folding_1x_compressed.mp4',   label: 'Original',   type: 'original'  },
+    { file: 'task_cloth_folding_2_1x_compressed.mp4', label: 'Generated',  type: 'generated' },
+    { file: 'task_cloth_folding_2x_compressed.mp4',   label: 'Generated',  type: 'generated' },
+    { file: 'task_cloth_folding_3x_compressed.mp4',   label: 'Generated',  type: 'generated' },
   ];
 
   const els = [];
@@ -172,7 +171,7 @@
     const card = document.createElement('div');
     card.className = 'video-card';
     card.innerHTML = `
-      <video id="v${i}" src="${v.file}" loop playsinline preload="auto"></video>
+      <video id="v${i}" src="${v.file}" loop playsinline muted preload="auto"></video>
       <div class="video-footer">
         <div class="label">
           <span class="badge ${v.type}">${v.type}</span>
@@ -182,7 +181,8 @@
       </div>
     `;
     grid.appendChild(card);
-    els.push(document.getElementById(`v${i}`));
+    const el = document.getElementById(`v${i}`);
+    els.push(el);
   });
 
   // Time display
@@ -193,59 +193,52 @@
       const s = Math.floor(t % 60).toString().padStart(2, '0');
       document.getElementById(`t${i}`).textContent = `${m}:${s}`;
     });
-  }, 200);
+  }, 100);
 
-  // Sync check
+  // Sync drift indicator
   setInterval(() => {
-    if (els.length < 2) return;
+    if (els.length < 2 || els[0].paused) return;
     const times = els.map(v => v.currentTime);
     const max = Math.max(...times), min = Math.min(...times);
     const status = document.getElementById('sync-status');
-    if (max - min < 0.3) {
+    if (max - min < 0.25) {
       status.textContent = '● synced';
       status.className = 'sync-status synced';
     } else {
       status.textContent = '● drifted';
       status.className = 'sync-status';
     }
-  }, 1000);
+  }, 800);
 
   function playAll() {
-    syncAll();
+    const t = els[0].currentTime;
+    els.forEach(v => { v.currentTime = t; });
     els.forEach(v => v.play());
   }
 
   function pauseAll() {
     els.forEach(v => v.pause());
+    document.getElementById('sync-status').textContent = '● paused';
+    document.getElementById('sync-status').className = 'sync-status';
   }
 
   function restartAll() {
     els.forEach(v => { v.currentTime = 0; });
-    playAll();
+    els.forEach(v => v.play());
   }
 
-  function syncAll() {
-    const t = els[0].currentTime;
-    els.forEach(v => { v.currentTime = t; });
-  }
-
-  // Auto-play on load
-  window.addEventListener('load', () => {
-    Promise.all(els.map(v => v.play())).catch(() => {
-      // autoplay blocked — user needs to click Play
-    });
-  });
-
-  // Click any video syncs all
+  // Propagate seek from any video to all others
   els.forEach(v => {
-    v.addEventListener('play', () => els.forEach(o => { if (o !== v && o.paused) o.play(); }));
-    v.addEventListener('pause', () => els.forEach(o => { if (o !== v && !o.paused) o.pause(); }));
     v.addEventListener('seeked', () => {
       const t = v.currentTime;
       els.forEach(o => { if (o !== v) o.currentTime = t; });
     });
   });
-</script>
 
+  // Auto-play on load (muted so browser allows it)
+  window.addEventListener('load', () => {
+    els.forEach(v => v.play().catch(() => {}));
+  });
+</script>
 </body>
 </html>
