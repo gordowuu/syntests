@@ -119,10 +119,10 @@
   <header>
     <h1><a href="/" style="color:inherit;text-decoration:none">Syn<span>Tests</span></a> <span style="color:#333;font-weight:300">/ umi_sweater_1</span></h1>
     <div class="controls">
-      <div class="sync-status" id="sync-status">â— not synced</div>
-      <button onclick="restartAll()">â® Restart</button>
-      <button onclick="pauseAll()">â¸ Pause</button>
-      <button onclick="playAll()" class="primary">â–¶ Play All</button>
+      <div class="sync-status" id="sync-status"> not synced</div>
+      <button onclick="restartAll()">Restart</button>
+      <button onclick="pauseAll()">Pause</button>
+      <button onclick="playAll()" class="primary">Play All</button>
     </div>
   </header>
   <main>
@@ -175,10 +175,10 @@
     const max = Math.max(...times), min = Math.min(...times);
     const status = document.getElementById('sync-status');
     if (max - min < 0.25) {
-      status.textContent = 'â— synced';
+      status.textContent = '● synced';
       status.className = 'sync-status synced';
     } else {
-      status.textContent = 'â— drifted';
+      status.textContent = '● drifted';
       status.className = 'sync-status';
     }
   }, 800);
@@ -191,7 +191,7 @@
 
   function pauseAll() {
     els.forEach(v => v.pause());
-    document.getElementById('sync-status').textContent = 'â— paused';
+    document.getElementById('sync-status').textContent = '● paused';
     document.getElementById('sync-status').className = 'sync-status';
   }
 
@@ -212,7 +212,7 @@
     });
   });
 
-  // Manual loop â€” restart all together when first video ends
+  // Manual loop  restart all together when first video ends
   els[0].addEventListener('ended', () => restartAll());
 
   // Auto-play on load (muted so browser allows it)
@@ -222,6 +222,7 @@
 </script>
 </body>
 </html>
+
 
 
 
