@@ -101,7 +101,8 @@
       min-height: 0;
       display: block;
       background: #000;
-      object-fit: cover;
+      object-fit: contain;
+      background: #0d0d0d;
     }
 
     .video-footer {
@@ -171,7 +172,7 @@
     const card = document.createElement('div');
     card.className = 'video-card';
     card.innerHTML = `
-      <video id="v${i}" src="${v.file}" loop playsinline muted preload="auto"></video>
+      <video id="v${i}" src="${v.file}" playsinline muted preload="auto"></video>
       <div class="video-footer">
         <div class="label">
           <span class="badge ${v.type}">${v.type}</span>
@@ -227,13 +228,20 @@
     els.forEach(v => v.play());
   }
 
-  // Propagate seek from any video to all others
+  // Propagate seek — guarded to prevent cascade loops
+  let isSyncing = false;
   els.forEach(v => {
     v.addEventListener('seeked', () => {
+      if (isSyncing) return;
+      isSyncing = true;
       const t = v.currentTime;
       els.forEach(o => { if (o !== v) o.currentTime = t; });
+      setTimeout(() => { isSyncing = false; }, 150);
     });
   });
+
+  // Manual loop — restart all together when first video ends
+  els[0].addEventListener('ended', () => restartAll());
 
   // Auto-play on load (muted so browser allows it)
   window.addEventListener('load', () => {
