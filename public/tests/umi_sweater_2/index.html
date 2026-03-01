@@ -1,49 +1,36 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SynTests — UMI Sweater 2</title>
+  <title>SynTests â€” UMI Sweater 2</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html, body {
-      height: 100%;
+    body {
       background: #0d0d0d;
       color: #eee;
       font-family: system-ui, sans-serif;
-      overflow: hidden;
-    }
-
-    .layout {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
     }
 
     header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #0d0d0d;
       padding: 10px 24px;
       border-bottom: 1px solid #1f1f1f;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-shrink: 0;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
-    header h1 {
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      color: #fff;
-    }
-
+    header h1 { font-size: 16px; font-weight: 600; letter-spacing: 0.05em; color: #fff; }
     header h1 span { color: #7c6cfc; }
 
-    .controls {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
+    .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
     button {
       background: #1e1e1e;
@@ -55,7 +42,6 @@
       cursor: pointer;
       transition: background 0.15s;
     }
-
     button:hover { background: #2a2a2a; }
     button.primary { background: #7c6cfc; border-color: #7c6cfc; color: #fff; }
     button.primary:hover { background: #6a5ae0; }
@@ -68,14 +54,9 @@
       border: 1px solid #222;
       border-radius: 20px;
     }
-
     .sync-status.synced { color: #4caf80; border-color: #1a3a2a; background: #0f1f18; }
 
-    main {
-      flex: 1;
-      padding: 16px 24px;
-      min-height: 0;
-    }
+    main { padding: 16px 24px; }
 
     .grid {
       display: grid;
@@ -110,13 +91,7 @@
       border-top: 1px solid #1a1a1a;
     }
 
-    .label {
-      font-size: 12px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .label { font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
 
     .badge {
       font-size: 10px;
@@ -126,34 +101,28 @@
       letter-spacing: 0.05em;
       text-transform: uppercase;
     }
-
     .badge.original  { background: #1a3040; color: #5ab0d8; border: 1px solid #1e4a60; }
     .badge.generated { background: #2a1a40; color: #a07cf0; border: 1px solid #3a2060; }
 
-    .video-time {
-      font-size: 11px;
-      color: #555;
-      font-variant-numeric: tabular-nums;
-    }
+    .video-time { font-size: 11px; color: #555; font-variant-numeric: tabular-nums; }
+
     @media (max-width: 640px) {
-      header { padding: 8px 14px; flex-wrap: wrap; gap: 8px; }
-      header h1 { font-size: 14px; }
-      .controls { gap: 6px; }
-      button { padding: 5px 10px; font-size: 11px; }
-      .sync-status { font-size: 10px; }
+      header { padding: 8px 14px; }
       main { padding: 10px 12px; }
       .grid { grid-template-columns: 1fr; }
+      button { padding: 5px 10px; font-size: 11px; }
+      .sync-status { font-size: 10px; }
     }  </style>
 </head>
 <body>
-<div class="layout">
+
   <header>
     <h1><a href="/" style="color:inherit;text-decoration:none">Syn<span>Tests</span></a> <span style="color:#333;font-weight:300">/ umi_sweater_2</span></h1>
     <div class="controls">
-      <div class="sync-status" id="sync-status">● not synced</div>
-      <button onclick="restartAll()">⏮ Restart</button>
-      <button onclick="pauseAll()">⏸ Pause</button>
-      <button onclick="playAll()" class="primary">▶ Play All</button>
+      <div class="sync-status" id="sync-status">â— not synced</div>
+      <button onclick="restartAll()">â® Restart</button>
+      <button onclick="pauseAll()">â¸ Pause</button>
+      <button onclick="playAll()" class="primary">â–¶ Play All</button>
     </div>
   </header>
   <main>
@@ -206,10 +175,10 @@
     const max = Math.max(...times), min = Math.min(...times);
     const status = document.getElementById('sync-status');
     if (max - min < 0.25) {
-      status.textContent = '● synced';
+      status.textContent = 'â— synced';
       status.className = 'sync-status synced';
     } else {
-      status.textContent = '● drifted';
+      status.textContent = 'â— drifted';
       status.className = 'sync-status';
     }
   }, 800);
@@ -222,7 +191,7 @@
 
   function pauseAll() {
     els.forEach(v => v.pause());
-    document.getElementById('sync-status').textContent = '● paused';
+    document.getElementById('sync-status').textContent = 'â— paused';
     document.getElementById('sync-status').className = 'sync-status';
   }
 
@@ -231,7 +200,7 @@
     els.forEach(v => v.play());
   }
 
-  // Propagate seek — guarded to prevent cascade loops
+  // Propagate seek â€” guarded to prevent cascade loops
   let isSyncing = false;
   els.forEach(v => {
     v.addEventListener('seeked', () => {
@@ -243,7 +212,7 @@
     });
   });
 
-  // Manual loop — restart all together when first video ends
+  // Manual loop â€” restart all together when first video ends
   els[0].addEventListener('ended', () => restartAll());
 
   // Auto-play on load (muted so browser allows it)
@@ -253,6 +222,8 @@
 </script>
 </body>
 </html>
+
+
 
 
 
