@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SynTests — Video Comparison</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      color: #eee;
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 20px 32px;
+      border-bottom: 1px solid #1f1f1f;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: #fff;
+    }
+
+    header h1 span { color: #7c6cfc; }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      color: #eee;
+      padding: 7px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    button:hover { background: #2a2a2a; border-color: #555; }
+    button.primary { background: #7c6cfc; border-color: #7c6cfc; color: #fff; }
+    button.primary:hover { background: #6a5ae0; }
+
+    .sync-status {
+      font-size: 12px;
+      color: #555;
+      padding: 4px 10px;
+      background: #151515;
+      border: 1px solid #222;
+      border-radius: 20px;
+    }
+
+    .sync-status.synced { color: #4caf80; border-color: #1a3a2a; background: #0f1f18; }
+
+    main {
+      flex: 1;
+      padding: 24px 32px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .video-card {
+      background: #111;
+      border: 1px solid #1f1f1f;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .video-card:hover { border-color: #333; }
+
+    .video-card video {
+      width: 100%;
+      display: block;
+      background: #000;
+    }
+
+    .video-footer {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .label {
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .badge.original { background: #1a3040; color: #5ab0d8; border: 1px solid #1e4a60; }
+    .badge.generated { background: #2a1a40; color: #a07cf0; border: 1px solid #3a2060; }
+
+    .video-time {
+      font-size: 11px;
+      color: #444;
+      font-variant-numeric: tabular-nums;
+    }
+
+    footer {
+      padding: 14px 32px;
+      border-top: 1px solid #1a1a1a;
+      font-size: 11px;
+      color: #333;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Syn<span>Tests</span></h1>
+  <div class="controls">
+    <div class="sync-status" id="sync-status">● not synced</div>
+    <button onclick="syncAll()">↺ Sync</button>
+    <button onclick="playAll()" class="primary">▶ Play All</button>
+    <button onclick="pauseAll()">⏸ Pause</button>
+    <button onclick="restartAll()">⏮ Restart</button>
+  </div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>syntests — cloth folding task comparison</footer>
+
+<script>
+  const videos = [
+    { file: 'task_cloth_folding_1x_compressed.mp4',   label: 'Task — 1x Speed',   type: 'original'  },
+    { file: 'task_cloth_folding_2_1x_compressed.mp4', label: 'Gen 2 — 1x Speed',  type: 'generated' },
+    { file: 'task_cloth_folding_2x_compressed.mp4',   label: 'Gen 1 — 2x Speed',  type: 'generated' },
+    { file: 'task_cloth_folding_3x_compressed.mp4',   label: 'Gen 3 — 3x Speed',  type: 'generated' },
+  ];
+
+  const els = [];
+  const grid = document.getElementById('grid');
+
+  videos.forEach((v, i) => {
+    const card = document.createElement('div');
+    card.className = 'video-card';
+    card.innerHTML = `
+      <video id="v${i}" src="${v.file}" loop playsinline preload="auto"></video>
+      <div class="video-footer">
+        <div class="label">
+          <span class="badge ${v.type}">${v.type}</span>
+          ${v.label}
+        </div>
+        <div class="video-time" id="t${i}">0:00</div>
+      </div>
+    `;
+    grid.appendChild(card);
+    els.push(document.getElementById(`v${i}`));
+  });
+
+  // Time display
+  setInterval(() => {
+    els.forEach((v, i) => {
+      const t = v.currentTime;
+      const m = Math.floor(t / 60);
+      const s = Math.floor(t % 60).toString().padStart(2, '0');
+      document.getElementById(`t${i}`).textContent = `${m}:${s}`;
+    });
+  }, 200);
+
+  // Sync check
+  setInterval(() => {
+    if (els.length < 2) return;
+    const times = els.map(v => v.currentTime);
+    const max = Math.max(...times), min = Math.min(...times);
+    const status = document.getElementById('sync-status');
+    if (max - min < 0.3) {
+      status.textContent = '● synced';
+      status.className = 'sync-status synced';
+    } else {
+      status.textContent = '● drifted';
+      status.className = 'sync-status';
+    }
+  }, 1000);
+
+  function playAll() {
+    syncAll();
+    els.forEach(v => v.play());
+  }
+
+  function pauseAll() {
+    els.forEach(v => v.pause());
+  }
+
+  function restartAll() {
+    els.forEach(v => { v.currentTime = 0; });
+    playAll();
+  }
+
+  function syncAll() {
+    const t = els[0].currentTime;
+    els.forEach(v => { v.currentTime = t; });
+  }
+
+  // Auto-play on load
+  window.addEventListener('load', () => {
+    Promise.all(els.map(v => v.play())).catch(() => {
+      // autoplay blocked — user needs to click Play
+    });
+  });
+
+  // Click any video syncs all
+  els.forEach(v => {
+    v.addEventListener('play', () => els.forEach(o => { if (o !== v && o.paused) o.play(); }));
+    v.addEventListener('pause', () => els.forEach(o => { if (o !== v && !o.paused) o.pause(); }));
+    v.addEventListener('seeked', () => {
+      const t = v.currentTime;
+      els.forEach(o => { if (o !== v) o.currentTime = t; });
+    });
+  });
+</script>
+
+</body>
+</html>
