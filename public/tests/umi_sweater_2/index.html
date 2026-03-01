@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SynTests — UMI Sweater 2</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: #0d0d0d;
+      color: #eee;
+      font-family: system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    .layout {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 10px 24px;
+      border-bottom: 1px solid #1f1f1f;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: #fff;
+    }
+
+    header h1 span { color: #7c6cfc; }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      color: #eee;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button:hover { background: #2a2a2a; }
+    button.primary { background: #7c6cfc; border-color: #7c6cfc; color: #fff; }
+    button.primary:hover { background: #6a5ae0; }
+
+    .sync-status {
+      font-size: 11px;
+      color: #555;
+      padding: 3px 10px;
+      background: #151515;
+      border: 1px solid #222;
+      border-radius: 20px;
+    }
+
+    .sync-status.synced { color: #4caf80; border-color: #1a3a2a; background: #0f1f18; }
+
+    main {
+      flex: 1;
+      padding: 16px 24px;
+      min-height: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 12px;
+      height: 100%;
+    }
+
+    .video-card {
+      background: #111;
+      border: 1px solid #1f1f1f;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .video-card video {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      display: block;
+      background: #000;
+      object-fit: contain;
+      background: #0d0d0d;
+    }
+
+    .video-footer {
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid #1a1a1a;
+    }
+
+    .label {
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .badge.original  { background: #1a3040; color: #5ab0d8; border: 1px solid #1e4a60; }
+    .badge.generated { background: #2a1a40; color: #a07cf0; border: 1px solid #3a2060; }
+
+    .video-time {
+      font-size: 11px;
+      color: #555;
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <header>
+    <h1><a href="/" style="color:inherit;text-decoration:none">Syn<span>Tests</span></a> <span style="color:#333;font-weight:300">/ umi_sweater_2</span></h1>
+    <div class="controls">
+      <div class="sync-status" id="sync-status">● not synced</div>
+      <button onclick="restartAll()">⏮ Restart</button>
+      <button onclick="pauseAll()">⏸ Pause</button>
+      <button onclick="playAll()" class="primary">▶ Play All</button>
+    </div>
+  </header>
+  <main>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+
+<script>
+  const videos = [
+    { file: 'task_cloth_folding_1x_15s.mp4',          label: 'Take 1', type: 'original'  },
+    { file: 'task_cloth_folding_2x_compressed.mp4',   label: 'Take 2', type: 'generated' },
+    { file: 'task_cloth_folding_3x_compressed.mp4',   label: 'Take 3', type: 'generated' },
+    { file: 'task_cloth_folding_4x_compressed.mp4',   label: 'Take 4', type: 'generated' },
+  ];
+
+  const els = [];
+  const grid = document.getElementById('grid');
+
+  videos.forEach((v, i) => {
+    const card = document.createElement('div');
+    card.className = 'video-card';
+    card.innerHTML = `
+      <video id="v${i}" src="${v.file}" playsinline muted preload="auto"></video>
+      <div class="video-footer">
+        <div class="label">
+          <span class="badge ${v.type}">${v.type}</span>
+        </div>
+        <div class="video-time" id="t${i}">0:00</div>
+      </div>
+    `;
+    grid.appendChild(card);
+    const el = document.getElementById(`v${i}`);
+    els.push(el);
+  });
+
+  // Time display
+  setInterval(() => {
+    els.forEach((v, i) => {
+      const t = v.currentTime;
+      const m = Math.floor(t / 60);
+      const s = Math.floor(t % 60).toString().padStart(2, '0');
+      document.getElementById(`t${i}`).textContent = `${m}:${s}`;
+    });
+  }, 100);
+
+  // Sync drift indicator
+  setInterval(() => {
+    if (els.length < 2 || els[0].paused) return;
+    const times = els.map(v => v.currentTime);
+    const max = Math.max(...times), min = Math.min(...times);
+    const status = document.getElementById('sync-status');
+    if (max - min < 0.25) {
+      status.textContent = '● synced';
+      status.className = 'sync-status synced';
+    } else {
+      status.textContent = '● drifted';
+      status.className = 'sync-status';
+    }
+  }, 800);
+
+  function playAll() {
+    const t = els[0].currentTime;
+    els.forEach(v => { v.currentTime = t; });
+    els.forEach(v => v.play());
+  }
+
+  function pauseAll() {
+    els.forEach(v => v.pause());
+    document.getElementById('sync-status').textContent = '● paused';
+    document.getElementById('sync-status').className = 'sync-status';
+  }
+
+  function restartAll() {
+    els.forEach(v => { v.currentTime = 0; });
+    els.forEach(v => v.play());
+  }
+
+  // Propagate seek — guarded to prevent cascade loops
+  let isSyncing = false;
+  els.forEach(v => {
+    v.addEventListener('seeked', () => {
+      if (isSyncing) return;
+      isSyncing = true;
+      const t = v.currentTime;
+      els.forEach(o => { if (o !== v) o.currentTime = t; });
+      setTimeout(() => { isSyncing = false; }, 150);
+    });
+  });
+
+  // Manual loop — restart all together when first video ends
+  els[0].addEventListener('ended', () => restartAll());
+
+  // Auto-play on load (muted so browser allows it)
+  window.addEventListener('load', () => {
+    els.forEach(v => v.play().catch(() => {}));
+  });
+</script>
+</body>
+</html>
+
